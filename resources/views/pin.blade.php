@@ -1,0 +1,192 @@
+{{--@php--}}
+{{--    $projectSource = request()->query('source'); // Get source from URL--}}
+{{--    $source = \App\Models\ProjectSource::where('uuid', $projectSource)->first()->source->name;--}}
+{{--    $isGoogleAds = in_array($source, ['Google-Ads']);--}}
+{{--@endphp--}}
+    <!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Distinguished</title>
+    <link rel="shortcut icon" href="{{ asset('assets/disting_images/icon.png') }}" sizes="32x32" type="image/svg">
+    <link rel="shortcut icon" href="{{ asset('assets/disting_images/icon.png') }}" sizes="16x16" type="image/svg">
+    <link rel="shortcut icon" href="{{ asset('assets/disting_images/icon.png') }}" sizes="72x72" type="image/svg">
+    <link rel="stylesheet" href="{{ asset('assets/css/disting/style.css') }}" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+</head>
+
+
+<body>
+<header class="navbar">
+    <img alt="Website Logo" src="{{ asset('assets/website-logo.png') }}" class="logo">
+    <button id="lang-toggle" class="lang-btn" onclick="toggleLanguage()">كردی</button>
+</header>
+
+<div class="content">
+    <div class="form">
+        <div class="welcome">
+            <h1 id="welcome-text">
+                مرحبًا بك في المتميزون
+            </h1>
+
+            <p id="welcome-info">العب بذكاء، اجمع أكثر واصعد للقمة</p>
+            <p class="bold-text" id="welcome-description">كلما زادت نقاطك زادت فرصك بالفوز </p>
+            <img class="image content-mobile"  alt="certificate"
+                 src="{{ asset('assets/disting_images/image.png') }}">
+        </div>
+
+        <div class="box">
+            <p id="info-phone" style="font-weight: 700; margin-bottom: 0.5rem">أدخل رقم جوالك لتتلقى رمز المرور</p>
+
+            <div class="content-component" style="margin-bottom: 1rem;">
+                <p>+964</p>
+                <input id='phone-number' type="text" title="phone">
+            </div>
+            <button type="submit" id="continue" class="content-component submit-button">متابعة</button>
+           <div class="instructions">
+                <p id="footer-text"> اهلا بك في مسابقة "بطل الجائزة الكبرى"</p>
+                <p id="trial-text"> من أسياسيل للمشتركين الجدد أول ثلاث أيام مجانا ثم تكلفة الاشتراك 300 د.ج يوميا </p>
+                <p id="cancel-text"> لإلغاء الاشتراك ارسل 0 مجانا إلى 4603 </p>
+            </div>
+        </div>
+    </div>
+
+    <img class="image content-desk" alt="certificate" src="{{ asset('assets/image.png') }}">
+</div>
+<script src="{{ asset('assets/js/disting/translation.js') }}"></script>
+
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const phoneInput = document.getElementById('phone');
+        const continueButton = document.getElementById('continue');
+        const errorDiv = document.getElementById('error');
+        let full_number = '';
+        phoneInput.addEventListener('input', function () {
+            // Remove all non-numeric characters
+            this.value = this.value.replace(/\D/g, '');
+
+            full_number = '964' + this.value;
+
+            // Validation
+            if (this.value.length < 7) {
+                continueButton.style.display = 'none';
+            } else if (full_number.startsWith('96477') || full_number.startsWith('964077')) {
+                // remove the 0 after the 964
+                full_number = full_number.replace(/^9640/, '964');
+                console.log(full_number);
+                // Check if the number is valid
+                if (full_number.length === 13) {
+                    // If valid, show the continue button
+                    continueButton.style.display = 'inline-block';
+                } else {
+                    // If not valid, hide the continue button
+                    continueButton.style.display = 'none';
+                }
+            }
+            else {
+                continueButton.style.display = 'none';
+            }
+        });
+        let  source = new URLSearchParams(window.location.search).get('source');
+        let clickId = new URLSearchParams(window.location.search).get('click_id') ||
+            new URLSearchParams(window.location.search).get('clickId') ||
+            new URLSearchParams(window.location.search).get('gclid') ||
+            new URLSearchParams(window.location.search).get('ttclid') ||
+            new URLSearchParams(window.location.search).get('wbraid') ||
+            new URLSearchParams(window.location.search).get('gbraid') ||
+            new URLSearchParams(window.location.search).get('fbclid');
+
+        currentLanguage = localStorage.getItem('language') || 'AR';
+        fetch('/save-preferred-language', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ language: currentLanguage })
+        });
+        document.querySelector('.submit-button').addEventListener('click', async function(e) {
+            e.preventDefault();
+
+            try {
+
+                const headersResponse = await fetch('/get-request-headers', {
+                    method: 'GET',
+                });
+                const { headersBase64, msisdn } = await headersResponse.json();
+
+
+                // First store the tracking data
+                const trackingResponse = await fetch('/pin-store-tracking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        click_id: clickId,
+                        msisdn: full_number
+                    })
+                });
+
+                const trackingData = await trackingResponse.json();
+                console.log(trackingData);
+                if (!trackingData.success) {
+                    throw new Error('Failed to store tracking data');
+                }
+                const getPinResponse = await fetch('/get-pin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        click_id: clickId,
+                        msisdn: full_number,
+                        languageId: currentLanguage === 'AR' ? 2 : 3,
+                    })
+                });
+
+                const getPinData = await getPinResponse.json();
+                if (!getPinData.success) {
+                    console.error('Error:', getPinData);
+                    // window.location.href = '/failure?code='+getPinData.code+'&message='+getPinData.message+'&msisdn='+full_number;
+                }
+                else {
+                    const antifraudResponse = await fetch('/pin-get-antifraud-script', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            user_headers: headersBase64,
+                            msisdn: full_number,
+                            user_ip: "{{ base64_encode(Request::ip()) }}",
+                            click_id: clickId,
+                            source: new URLSearchParams(window.location.search).get('source')
+
+                        })
+                    });
+                    const antifraudData = await antifraudResponse.json();
+                    if (!antifraudData.success) {
+                       window.location.href = '/failure?code='+antifraudData.code+'&message='+antifraudData.message+'&msisdn='+full_number;
+                    }
+                    // Store both the script and the AntiFrauduniqid
+                    sessionStorage.setItem('pin-antiFraudScript', antifraudData.script);
+                    sessionStorage.setItem('pin-antiFrauduniqid', antifraudData.antiFrauduniqid);
+
+                   window.location.href = `/otp?click_id=${clickId}&source=${source}&msisdn=${full_number}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                // window.location.href = '/failure';
+            }
+        });
+    });
+</script>
+</html>
