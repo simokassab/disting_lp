@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distinguished</title>
-    <link rel="stylesheet" href="{{ asset('assets/css/disting/style.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/disting/style_lp2.css') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
@@ -24,7 +24,7 @@
             <p id="welcome-info">العب بذكاء، اجمع أكثر واصعد للقمة</p>
             <p class="bold-text" id="welcome-description">كلما زادت نقاطك زادت فرصك بالفوز </p>
             <img class="image content-mobile"  alt="certificate"
-                 src="{{ asset('assets/disting_images/image.png') }}">
+                 src="{{ asset('assets/disting_images/image_lp2.png') }}">
         </div>
 
         <div class="box">
@@ -38,8 +38,8 @@
         </div>
     </div>
 
-    <img class="image content-desk" alt="certificate" src="{{ asset('assets/image.png') }}">
+    <img class="image content-desk" alt="certificate" src="{{ asset('assets/image_lp2.png') }}">
 </div>
-<script src="{{ asset('assets/js/disting/translation.js') }}"></script>
+<script src="{{ asset('assets/js/disting/translation_lp2.js') }}"></script>
 </body>
 </html>

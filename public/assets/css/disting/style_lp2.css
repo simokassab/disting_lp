@@ -280,7 +280,7 @@ footer{
 
     .logo {
         width: auto;
-        height: 40px;
+        height: 60px;
     }
 
     .lang-btn{
@@ -294,7 +294,7 @@ footer{
     }
 
     .content {
-        padding-top: 4rem;
+        padding-top: 6rem;
         flex-direction: column-reverse;
     }
 
@@ -307,8 +307,18 @@ footer{
     .image {
         width: 100%;
         height: auto;
-        margin-top: -3rem;
+        margin-top: -5rem;
+        margin-left: 1rem;
     }
+
+    /* .image{
+        background-image: url('/assets/image.png');
+        background-position: center;
+        object-fit: cover;
+        background-repeat: no-repeat;
+        width: 600px;
+        width: 700px;
+    } */
 
     .welcome {
         align-items: center;
