@@ -44,8 +44,8 @@ class HeController extends Controller
         if (!$source) {
             return redirect('failure?errors=source_not_found');
         }
-//        $msisdn = $this->getMsisdnFromHeaders($request);
-        $msisdn = "9647701394275";
+        $msisdn = $this->getMsisdnFromHeaders($request);
+//        $msisdn = "9647701394275";
         if (!$msisdn) {
 
 //            if ($request->has('testmode') && $request->input('testmode') == '1') {
@@ -58,12 +58,12 @@ class HeController extends Controller
 //                return redirect('pin?' . $request->getQueryString());
 //            }
 //            else {
-//                Redirect::create([
-//                    'from' => $request->fullUrl(),
-//                    'to' => 'http://195.230.102.96/TEST_LP/OP014565-11/Register_PIN.html.',
-//                    'user_ip' => $request->ip(),
-//                ]);
-                return redirect('failure?errors=msisdn_not_found');
+                Redirect::create([
+                    'from' => $request->fullUrl(),
+                    'to' => 'PIN FLOW',
+                    'user_ip' => $request->ip(),
+                ]);
+            return redirect('pin?' . $request->getQueryString());
 //            }
         }
         if ($msisdn) {
