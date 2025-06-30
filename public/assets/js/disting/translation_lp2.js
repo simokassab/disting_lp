@@ -2,7 +2,7 @@ const translations = {
     ar: {
         direction: 'rtl',
         languageBtn: 'عربی',
-        welcomeText: `</span>مرحبًا بك في <span class='bold-text'>المتميزون`,
+        welcomeText: `</span> مرحبًا بك في <span class='bold-text'> المتميزون`,
         welcomeInfo: `أثبت ذكائك، اكسب لقب "المتميزون"، <span class='bold-text'>واربح جوائز</span>`,
         welcomeDesc: `كلما زادت نقاطك زادت فرصك بالفوز`,
         subscribe: "إشترك",
