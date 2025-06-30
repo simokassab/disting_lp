@@ -245,6 +245,13 @@ input {
     border-radius: 0 0 10px 10px;
 }
 
+.bottom-image {
+    width: 150px;
+    height: auto;
+    display: block;
+    margin: 2rem auto;
+}
+
 footer{
     width: 100%;
     display: flex;
@@ -363,5 +370,11 @@ footer{
 
     .content-component, .select-wrapper, .custom-select {
         max-width: 100%;
+    }
+
+    .bottom-image {
+        width: 120px;
+        margin: 1.5rem auto;
+        padding-top: 1rem;
     }
 }

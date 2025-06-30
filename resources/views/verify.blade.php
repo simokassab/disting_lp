@@ -58,6 +58,8 @@
 
     <img class="image content-desk" alt="certificate" src="{{ asset('assets/image_lp2.png') }}">
 </div>
+<img class="bottom-image"
+     src="{{ asset('assets/disting_images/White PNG Transparent.svg') }}">
 <script src="{{ asset('assets/js/disting/translation_lp2.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', async function () {
