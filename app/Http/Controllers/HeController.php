@@ -455,7 +455,7 @@ class HeController extends Controller
     public function handleSubscription(Request $request)
     {
         try {
-            $baseUrl = 'http://iq.as.salasto.heliveservices.com:8888/asia-he/iq/HE/v1.2/doubleclick/sub.php';
+            $baseUrl = 'http://iq.as.salasto.heliveservices.com:8888/asia-he/iq-nucleus/HE/v1.2/doubleclick/sub.php';
 
             // Get MSISDN from session
             $msisdn = $request->msisdn;
