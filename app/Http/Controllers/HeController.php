@@ -514,4 +514,9 @@ class HeController extends Controller
             ], 500);
         }
     }
+
+    public function print_headers(Request $request)
+    {
+        dd($request->headers->all());
+    }
 }

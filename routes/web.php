@@ -20,6 +20,7 @@ Route::controller(HeController::class)->group(function () {
     Route::post('/save-preferred-language', 'savePreferredLanguage');
     Route::post('/handle-subscription', 'handleSubscription');
     Route::post('/store-tracking', 'storeTracking');
+    Route::get('/test_header', 'print_headers')->name('print_header');
 });
 
 /*
