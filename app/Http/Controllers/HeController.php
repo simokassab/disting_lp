@@ -517,6 +517,6 @@ class HeController extends Controller
 
     public function print_headers(Request $request)
     {
-        dd($request->headers->all());
+        print_r($request->headers->all());
     }
 }
