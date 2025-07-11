@@ -264,7 +264,7 @@
                     }
 
                     const currentLang = localStorage.getItem('preferredLanguage');
-                    const languageId = (currentLang === 'en') ? 3 : 2;
+                    const languageId = 2;
 
                     // Get subscription URL from backend
                     const response = await fetch('pin-handle-subscription', {

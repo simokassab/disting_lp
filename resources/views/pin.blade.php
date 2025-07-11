@@ -68,6 +68,7 @@
         const continueButton = document.getElementById('continue');
         const loadingMessage = document.getElementById('loading-message');
         const errorDiv = document.getElementById('error');
+        let antiFrauduniqid = '';
         let full_number = '';
         let anti_fraut_id = '';
         phoneInput.addEventListener('input', function () {
@@ -157,6 +158,7 @@
             // document.querySelector('.submit-button').style.display = 'block';
         }
         // alert('antiFrauduniqid: ' + antifraudData.antiFrauduniqid);
+        antiFrauduniqid = antifraudData.antiFrauduniqid;
         sessionStorage.setItem('MCPuniqid', antifraudData.mcp_uniq_id);
 
 
@@ -191,9 +193,9 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
-                        click_id: anti_fraut_id,
+                        anti_fraut_id: anti_fraut_id,
                         msisdn: full_number,
-                        languageId: currentLanguage === 'AR' ? 2 : 3,
+                        languageId: 2,
                     })
                 });
 

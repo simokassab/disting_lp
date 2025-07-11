@@ -14,17 +14,17 @@ class PinController extends Controller
 {
     private array $config = [
         'shortcode' => 4600,
-        'channelId' => 22718
+        'channelId' => 22737
     ];
 
     public function pin(Request $request)
     {
         if (!$request->has('source')) {
-            return redirect('failure?errors=source_not_found');
+            return redirect()->route('lp1.failure', ['errors' => 'source_not_found']);
         }
         $source = ProjectSource::where('uuid', $request->input('source'))->first();
         if (!$source) {
-            return redirect('failure?errors=source_not_found');
+            return redirect()->route('lp1.failure', ['errors' => 'source_not_found']);
         }
         $trackingData = [
             'project_source_id' => $source->id,
@@ -101,68 +101,92 @@ class PinController extends Controller
     public function getAntiFraudScript(Request $request)
     {
 //        try {
-            $baseUrl = 'http://iq.asiacell.gph.digitalads.digitalabs.ae:9090/Shield/AntiFraud/Prepare/';
-            $queryParams = [
-                'Page' => 2,
-                'ChannelID' => intval($this->config['channelId']),
-                'ClickID' => $request->click_id,
-                'Headers' => $request->user_headers,
-                'UserIP' => $request->user_ip,
-                'MSISDN' => $request->msisdn
-            ];
-            Log::error('GETTING ANTI FRAUD SCRIPT');
-            Log::error('queryParams: ' . json_encode($queryParams));
-            $project_source = ProjectSource::where('uuid', $request->source)->first();
-            $tracking = Tracking::where('click_id', $request->click_id)->where('source', 'PIN')
-                ->where('project_source_id',$project_source->id)
-                ->first();
+        $baseUrl = 'http://iq.asiacell.gph.digitalads.digitalabs.ae:9090/Shield/AntiFraud/Prepare/';
+        $queryParams = [
+            'Page' => $request->page,
+            'ChannelID' => intval($this->config['channelId']),
+            'ClickID' => $request->click_id,
+            'Headers' => $request->user_headers,
+            'UserIP' => $request->user_ip,
+        ];
 
-            $integration = IntegrationLog::updateOrCreate(
-                [
-                    'provider' => 'anti_fraud',
-                    'tracking_id' => $tracking->id,
-                    'event_type' => 'request',
-                    'status' => 'success',
-                ],
-                [
-                    'payload' => $queryParams,
-                    'url' => $baseUrl,
-                ]);
+        if ($request->page == '2'){
+            $queryParams['MSISDN'] = $request->msisdn;
 
-            // Make the request
-            $response = Http::get($baseUrl . '?' . http_build_query($queryParams));
-            Log::error($response->body());
-//            i want to check if response header has AntiFrauduniqid
-            if ($response->header('AntiFrauduniqid')) {
-                $integration->status = 'success';
-                $integration->metadata = [
-                    'header' => $response->headers(),
-                ];
-            }
-            else {
-                $integration->status = 'failed';
-                $integration->error_message = $response->body();
-                $integration->metadata = [
-                    'body' => $response->body()
-                ];
-            }
-            $integration->save();
-            $tracking->anti_fraud_click_id = $response->header('AntiFrauduniqid');
-            $tracking->msisdn = $request->msisdn;
-            $tracking->first_click = true;
-            $tracking->save();
-            if (!$response->successful()) {
-                redirect('failure');
-                throw new \Exception('Anti-fraud API request failed');
-            }
+        }
+        else {
+            $queryParams['MSISDN'] = '';
+        }
 
+//            dd($queryParams, $baseUrl . '?' . http_build_query($queryParams));
+        $project_source = ProjectSource::where('uuid', $request->source)->first();
+        $tracking = Tracking::where('click_id', $request->click_id)->where('source', 'PIN')
+            ->where('project_source_id',$project_source->id)
+            ->first();
 
-            // Get the script from response body and AntiFrauduniqid from header
-            return Response::json([
-                'success' => true,
-                'script' => $response->body(),
-                'antiFrauduniqid' => $response->header('AntiFrauduniqid')
+        $integration = IntegrationLog::updateOrCreate(
+            [
+                'provider' => 'anti_fraud',
+                'tracking_id' => $tracking->id,
+                'event_type' => 'request',
+                'status' => 'success',
+            ],
+            [
+                'payload' => $queryParams,
+                'url' => $baseUrl,
             ]);
+
+        // Make the request
+        $response = Http::get($baseUrl . '?' . http_build_query($queryParams));
+
+//            i want to check if response header has AntiFrauduniqid
+        if ($response->header('AntiFrauduniqid')) {
+            $integration->status = 'success';
+            $integration->metadata = [
+                'header' => $response->headers(),
+            ];
+        }
+        else {
+            $integration->status = 'failed';
+            $integration->error_message = $response->body();
+            $integration->metadata = [
+                'body' => $response->body()
+            ];
+        }
+        $integration->save();
+        $tracking->anti_fraud_click_id = $response->header('AntiFrauduniqid');
+        $tracking->msisdn = $request->msisdn;
+        $tracking->first_click = true;
+        $tracking->save();
+        if (!$response->successful()) {
+            redirect('failure');
+            throw new \Exception('Anti-fraud API request failed');
+        }
+
+        if ($request->save_antifraud == '1') {
+            $tracking->anti_fraud_click_id = $response->header('AntiFrauduniqid');
+            $tracking->save();
+        }
+        if ($request->page == '1'){
+            $tracking->mcp_uniq_id = $response->header('Mcpuniqid');
+            $tracking->save();
+        }
+        if ($request->page === '2') {
+            $tracking->second_page_visit = true;
+            $tracking->save();
+        }
+
+        Log::info('AntiFraud API Response', [
+            'status' => $response->status(),
+            'headers' => $response->headers()
+        ]);
+        // Get the script from response body and AntiFrauduniqid from header
+        return Response::json([
+            'success' => true,
+            'script' => $response->body(),
+            'antiFrauduniqid' => $response->header('AntiFrauduniqid'),
+            'mcp_uniq_id' => $response->header('Mcpuniqid'),
+        ]);
 
 //        } catch (\Exception $e) {
 //            return Response::json([
@@ -175,23 +199,27 @@ class PinController extends Controller
     public function getPinCode(Request $request)
     {
 
-        $url = 'http://iq.asiacell.gph.digitalads.digitalabs.ae:9090/PIN/actions/sendPincode';
-        $tracking = Tracking::where('click_id', $request->click_id)
-            ->where('source', 'PIN')
+        $url = 'http://iq.asiacell.distinguished.digitalads.digitalabs.ae:9090/PIN/actions/sendPincode';
+        $tracking = Tracking::where('source', 'PIN')
             ->where('msisdn', $request->msisdn)
             ->first();
         $queryParams = [
             'ChannelID' => intval($this->config['channelId']),
-            'ClickID' => $tracking->click_id,
+            'ClickID' => $request->anti_fraut_id,
             'msisdn' => $request->msisdn,
             'shortcode' => intval($this->config['shortcode']),
             'LanguageID' => $request->languageId,
-            'campaignId' => 131 // Changed to match documentation case
+            'campaignId' => 152
         ];
-        Log::error('GET PIN CODE');
-        Log::error('queryParams: ' . json_encode($queryParams));
-        // Make the request
+
         $response = Http::get($url . '?' . http_build_query($queryParams));
+        Log::info('getPinCode Request', [
+            'url' => $url,
+            'queryParams' => $queryParams,
+            'responseStatus' => $response->status(),
+            'responseHeaders' => $response->headers(),
+            'responseBody' => $response->json()
+        ]);
         $bodyContent = $response->json(); // Parse JSON response
         Log::error('response: ' . json_encode($bodyContent));
         // Log the interaction
@@ -259,7 +287,7 @@ class PinController extends Controller
             $tracking->second_click = true;
             $tracking->save();
         }
-        $url = 'http://iq.asiacell.gph.digitalads.digitalabs.ae:9090/PIN/actions/verifyPincode';
+        $url = 'http://iq.asiacell.distinguished.digitalads.digitalabs.ae:9090/PIN/actions/verifyPincode';
         $queryParams = [
             'ChannelID' => intval($this->config['channelId']),
             'ClickID' => $tracking->anti_fraud_click_id,
@@ -267,7 +295,7 @@ class PinController extends Controller
             'shortcode' => intval($this->config['shortcode']),
             'pin' => $request->input('otpCode'),
             'AntiFrauduniqid' => $tracking->anti_fraud_click_id,
-            'campaignId' => 131,
+            'campaignId' => 152,
             'LanguageID' => intval($request->input('languageId'))
         ];
         Log::error('HANDLE SUBSCRIPTION');
@@ -295,18 +323,25 @@ class PinController extends Controller
 
             // Check response code for redirection
             if (isset($bodyContent['Success']) &&
-                isset($bodyContent['Code']) && $bodyContent['Code'] == "10300" && $bodyContent['message']=='OPERATION_SUCCESS') {
+                isset($bodyContent['Code']) && $bodyContent['Code'] == "10300") {
                 $integration->status = 'success';
                 $integration->metadata = [
                     'header' => $response->headers(),
                     'body' => $bodyContent
                 ];
                 $integration->save();
-                // Success case - redirect to OTP route with params
+
+                if (isset($bodyContent['data'])) {
+                    $tracking->success = true;
+                    $tracking->failure = false;
+                    $tracking->save();
+                }
+
                 return Response::json([
                     'success' => true,
+                    'redirection_url' => $bodyContent['data'] ?? 'success',
                     'msisdn' => $tracking->msisdn,
-                    'click_id' => $tracking->click_id
+                    'click_id' => $tracking->anti_fraud_click_id,
                 ]);
             } else {
                 return Response::json([
