@@ -205,7 +205,6 @@
         });
 
         const antifraudData = await antifraudResponse.json();
-        console.log(antifraudData);
         if (!antifraudData.success) {
             window.location.href = 'failure?msisdn=' + msisdn + '&error=' + antifraudData.message;
         }
@@ -228,29 +227,9 @@
             console.error('AntiFrauduniqid not found');
             return;
         }
-
-        // First store the tracking data
-        // const trackingResponse = await fetch('/pin-store-tracking', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        //     },
-        //     body: JSON.stringify({
-        //         click_id: clickId,
-        //         msisdn: msisdn
-        //     })
-        // });
-        //
-        // const trackingData = await trackingResponse.json();
-        // console.log(trackingData);
-        // if (!trackingData.success) {
-        //     throw new Error('Failed to store tracking data');
-        // }
-
-        // Handle subscription confirmation
         if (subscribeButton) {
             subscribeButton.addEventListener('click', async function (e) {
+                console.log("🔘 click handler running");
                 e.preventDefault();
                 let otpCode = Array.from(document.querySelectorAll('.otp-input')).map(input => input.value).join('');
 
@@ -286,7 +265,6 @@
                     sessionStorage.setItem('preferredLanguage', currentLang);
 
                     const data = await response.json();
-
                     if (!data.success) {
                         if (data.message === "WRONG_PIN") {
                             document.querySelector('.error-text').style.display = 'block';
@@ -298,15 +276,21 @@
                             subscribeButton.style.display = validateOTP() ? 'block' : 'none';
                             loadingMessage.style.display = 'none';
                         } else {
-                            window.location.href = 'failure?source=' + source + '&errors=' + data.message + '&code=' + data.code + '&msisdn=' + data.msisdn;
+                            window.location.href = '/failure?source=' + source + '&errors=' + data.message + '&code=' + data.code + '&msisdn=' + data.msisdn;
+                            return;
                         }
                     } else {
-                        document.querySelector('.error-text').style.display = 'none';
-                        window.location.href = 'success?msisdn=' + data.msisdn + '&ClickID=' + data.click_id;
+                        // Clean up
+                        sessionStorage.removeItem('antiFrauduniqid');
+                        if (data.redirection_url ==='success') {
+                            window.location.href = '/success?msisdn=' + data.msisdn + '&ClickID=' + data.click_id;
+                            return;
+                        }
+                        else {
+                            window.location.href = data.redirection_url;
+                            return;
+                        }
                     }
-
-                    // Clean up
-                    sessionStorage.removeItem('antiFrauduniqid');
 
                 } catch (error) {
                     console.error('Error:', error);
