@@ -302,22 +302,22 @@ class PinController extends Controller
         Log::error('queryParams: ' . json_encode($queryParams));
         Log::error($url . '?' . http_build_query($queryParams));
         // Make the request
-//        $response = Http::get($url . '?' . http_build_query($queryParams));
-        Http::fake([
-            '*' => Http::response(
-                [
-                    'Success' => 'true',
-                    'Code'    => '10300',
-                    'Message' => 'You have successfully subscribed to the Service',
-                    'data' => 'https://example.com/success',
-                ],
-                200,
-                ['Content-Type' => 'application/json']
-            ),
-        ]);
+        $response = Http::get($url . '?' . http_build_query($queryParams));
+//        Http::fake([
+//            '*' => Http::response(
+//                [
+//                    'Success' => 'true',
+//                    'Code'    => '10300',
+//                    'Message' => 'You have successfully subscribed to the Service',
+//                    'data' => 'https://example.com/success',
+//                ],
+//                200,
+//                ['Content-Type' => 'application/json']
+//            ),
+//        ]);
 
         // Now this returns an Illuminate\Http\Client\Response
-        $response = Http::get($url . '?' . http_build_query($queryParams));
+//        $response = Http::get($url . '?' . http_build_query($queryParams));
         $integration = IntegrationLog::updateOrCreate(
             [
                 'provider' => 'digitalads',
