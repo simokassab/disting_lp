@@ -58,6 +58,7 @@ class PinController extends Controller
             ],
             $trackingData
         );
+        Log::info('Tracking data stored in session');
         return view('pin', ['trackingData' => $trackingData]);
     }
 
@@ -83,6 +84,11 @@ class PinController extends Controller
             $tracking->msisdn = $request->input('msisdn');
             $tracking->first_click = true;
             $tracking->save();
+            Log::info('Tracking data stored', [
+                'click_id' => $clickId,
+                'msisdn' => $tracking->msisdn,
+                'project_source_id' => $trackingData['project_source_id']
+            ]);
             return response()->json([
                 'success' => true,
                 'tracking_id' => $tracking->id
@@ -95,6 +101,7 @@ class PinController extends Controller
 //                'message' => 'Failed to store tracking data'
 //            ], 500);
 //        }
+
     }
 
 
@@ -118,12 +125,10 @@ class PinController extends Controller
             $queryParams['MSISDN'] = '';
         }
 
-//            dd($queryParams, $baseUrl . '?' . http_build_query($queryParams));
         $project_source = ProjectSource::where('uuid', $request->source)->first();
         $tracking = Tracking::where('click_id', $request->click_id)->where('source', 'PIN')
             ->where('project_source_id',$project_source->id)
             ->first();
-
         $integration = IntegrationLog::updateOrCreate(
             [
                 'provider' => 'anti_fraud',
@@ -135,11 +140,10 @@ class PinController extends Controller
                 'payload' => $queryParams,
                 'url' => $baseUrl,
             ]);
-
+        Log::info('Antifraud api requested');
         // Make the request
         $response = Http::get($baseUrl . '?' . http_build_query($queryParams));
-
-//            i want to check if response header has AntiFrauduniqid
+        Log::info('Antifraud api response received');
         if ($response->header('AntiFrauduniqid')) {
             $integration->status = 'success';
             $integration->metadata = [
@@ -211,18 +215,13 @@ class PinController extends Controller
             'LanguageID' => $request->languageId,
             'campaignId' => 152
         ];
-
-        $response = Http::get($url . '?' . http_build_query($queryParams));
         Log::info('getPinCode Request', [
             'url' => $url,
-            'queryParams' => $queryParams,
-            'responseStatus' => $response->status(),
-            'responseHeaders' => $response->headers(),
-            'responseBody' => $response->json()
+            'queryParams' => $queryParams
         ]);
+        $response = Http::get($url . '?' . http_build_query($queryParams));
+        Log::info('getPinCode received');
         $bodyContent = $response->json(); // Parse JSON response
-        Log::error('response: ' . json_encode($bodyContent));
-        // Log the interaction
         $integration = IntegrationLog::updateOrCreate(
             [
                 'provider' => 'digitalads',
@@ -315,7 +314,7 @@ class PinController extends Controller
 //                ['Content-Type' => 'application/json']
 //            ),
 //        ]);
-
+        Log::info('Verify pin code received');
         // Now this returns an Illuminate\Http\Client\Response
 //        $response = Http::get($url . '?' . http_build_query($queryParams));
         $integration = IntegrationLog::updateOrCreate(
@@ -388,6 +387,7 @@ class PinController extends Controller
         if (!$request->has('source')) {
             return redirect('failure?errors=source_not_found');
         }
+        Log::info('OTP Verification page opened');
         $source = ProjectSource::where('uuid', $request->input('source'))->first();
         if (!$source) {
             return redirect('failure?errors=source_not_found');
