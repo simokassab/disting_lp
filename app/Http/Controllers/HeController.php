@@ -238,7 +238,7 @@ class HeController extends Controller
         Log::error('Failure callback received: ' . json_encode($request->all()));
         $msisdn = $request->msisdn;
         $anti_fraud_click_id = $request->ClickID;
-        $tracking = Tracking::where('msisdn', $msisdn)->first();
+        $tracking = Tracking::where('msisdn', $msisdn)->where('anti_fraud_click_id', $anti_fraud_click_id)->first();
         if ($tracking) {
             $tracking->failure = true;
             $tracking->save();
