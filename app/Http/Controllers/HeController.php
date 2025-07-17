@@ -235,6 +235,7 @@ class HeController extends Controller
 
     public function failure(Request $request)
     {
+        Log::error('Failure callback received: ' . json_encode($request->all()));
         $msisdn = $request->msisdn;
         $anti_fraud_click_id = $request->ClickID;
         $tracking = Tracking::where('msisdn', $msisdn)->first();
@@ -479,6 +480,7 @@ class HeController extends Controller
                 'gclid' => $tracking->click_id,
             ];
 
+
             if ($tracking) {
                 $tracking->second_click = true;
                 $tracking->save();
@@ -499,6 +501,12 @@ class HeController extends Controller
                 $response = Response::json([
                     'success' => true,
                     'redirectUrl' => $fullUrl
+                ]);
+                Log::info('Subscription request sent', [
+                    'msisdn' => $msisdn,
+                    'click_id' => $tracking->click_id,
+                    'anti_fraud_click_id' => $request->antiFrauduniqid,
+                    'url' => $fullUrl
                 ]);
                 // Return the URL to frontend
                 return $response;
